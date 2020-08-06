@@ -1,6 +1,5 @@
 package ru.favarish.timeTracker.entities;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,18 +7,19 @@ import javax.persistence.*;
 import java.util.Date;
 
 @Entity
-@Table(name = "users")
+@Table(name = "tasks")
 @Getter
 @Setter
-public class User {
+public class Task {
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Id
     private Integer id;
 
-    private String name;
+    private Integer userID;
 
-    private Date dateBirth;
+    private String descriptionTask;
 
-    private String description;
+    private Date timeStart;
 
+    private Date timeFinish;
 }
