@@ -1,6 +1,7 @@
 package ru.favarish.timeTracker;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import ru.favarish.timeTracker.entities.Task;
@@ -274,8 +275,8 @@ public class RestController {
 
     @RequestMapping("show_sum_workcosts/{userName}/{dateA}/{dateB}")
     public String showSumWorkCosts(@PathVariable("userName") String userName,
-                                             @PathVariable("dateA") String dateAStr,
-                                             @PathVariable("dateB") String dateBStr) throws ParseException {
+                                   @PathVariable("dateA") String dateAStr,
+                                   @PathVariable("dateB") String dateBStr) throws ParseException {
         User user = userRepository.findByName(userName);
         if (user == null) {
             throw new NameNotFoundException(userName);
@@ -302,5 +303,28 @@ public class RestController {
         long minutes = timeMinutes % 60;
         String time = "" + hours + ":" + minutes;
         return userName + " - " + time;
+    }
+
+    @DeleteMapping("delete_user_info/{userName}")
+    public void deleteUserInfo(@PathVariable("userName") String userName) {
+        User user = userRepository.findByName(userName);
+        if (user == null) {
+            throw new NameNotFoundException(userName);
+        }
+        user.setDescription(null);
+        user.setDateBirth(null);
+        userRepository.save(user);
+    }
+
+    @DeleteMapping("clear_tracking_data/{userName}")
+    public void clearTrackingData(@PathVariable("userName") String userName) {
+        User user = userRepository.findByName(userName);
+        if (user == null) {
+            throw new NameNotFoundException(userName);
+        }
+        List<Task> tasks = taskRepository.findByUserId(user.getId());
+        for (Task task : tasks) {
+            taskRepository.delete(task);
+        }
     }
 }
