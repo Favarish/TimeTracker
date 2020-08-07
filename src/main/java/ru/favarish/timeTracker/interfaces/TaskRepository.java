@@ -15,4 +15,6 @@ public interface TaskRepository extends CrudRepository<Task, Integer> {
     List<Task> findByUserId(int userId);
 
     List<Task> findByUserIdOrderByTimeStart(Integer userId);
+
+    List<Task> findAllByOrderByTimeStart();
 }

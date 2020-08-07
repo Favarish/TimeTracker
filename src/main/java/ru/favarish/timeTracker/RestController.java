@@ -14,8 +14,8 @@ import ru.favarish.timeTracker.interfaces.UserRepository;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @org.springframework.web.bind.annotation.RestController
 public class RestController {
@@ -26,6 +26,8 @@ public class RestController {
     TaskRepository taskRepository;
     SimpleDateFormat formatterDateBirth = new SimpleDateFormat("dd.M.yyyy");
     SimpleDateFormat formatterTimeTask = new SimpleDateFormat("HH:mm dd.M.yyyy");
+    SimpleDateFormat formatterHHmm = new SimpleDateFormat("HH:mm");
+    SimpleDateFormat formatterDdHHmm = new SimpleDateFormat("dd HH:mm");
 
     @RequestMapping("create_user/{name}")
     public void createUser(@PathVariable("name") String name) {
@@ -207,5 +209,98 @@ public class RestController {
         taskRepository.save(task);
     }
 
+    @RequestMapping("show_work_costs/{userName}/{dateA}/{dateB}")
+    public Map<String, String> showWorkCosts(@PathVariable("userName") String userName,
+                                             @PathVariable("dateA") String dateAStr,
+                                             @PathVariable("dateB") String dateBStr) throws ParseException {
+        User user = userRepository.findByName(userName);
+        if (user == null) {
+            throw new NameNotFoundException(userName);
+        }
+        Date dateA = formatterTimeTask.parse(dateAStr);
+        Date dateB = formatterTimeTask.parse(dateBStr);
+        List<Task> tasks = taskRepository.findByUserId(user.getId());
+        List<Task> needTask = new ArrayList<>();
+        for (Task task : tasks) {
+            if (task.getTimeFinish() == null) {
+                continue;
+            }
+            if ((dateA.before(task.getTimeStart())) && (dateB.after(task.getTimeFinish()))) {
+                needTask.add(task);
+            }
+        }
 
+        Map<String, String> taskTime = new HashMap<String, String>();
+
+        for (Task task : needTask) {
+            long timeMillies = Math.abs(task.getTimeStart().getTime() - task.getTimeFinish().getTime());
+            long timeMinutes = TimeUnit.MINUTES.convert(timeMillies, TimeUnit.MILLISECONDS);
+            long hours = timeMinutes / 60;
+            long minutes = timeMinutes % 60;
+            String time = "" + hours + ":" + minutes;
+
+            taskTime.put(task.getDescriptionTask(), time);
+        }
+
+        return taskTime;
+    }
+
+    @RequestMapping("show_time_intervals/{timeA}/{timeB}")
+    public Map<String, String> showTimeIntervals(@PathVariable("timeA") String timeAStr,
+                                                 @PathVariable("timeB") String timeBStr) throws ParseException {
+        Date dateA = formatterTimeTask.parse(timeAStr);
+        Date dateB = formatterTimeTask.parse(timeBStr);
+        List<Task> tasks = taskRepository.findAllByOrderByTimeStart();
+        List<Task> needTask = new ArrayList<>();
+        for (Task task : tasks) {
+            if (task.getTimeFinish() == null) {
+                continue;
+            }
+            if ((dateA.before(task.getTimeStart())) && (dateB.after(task.getTimeFinish()))) {
+                needTask.add(task);
+            }
+        }
+
+        Map<String, String> taskInterval = new HashMap<String, String>();
+
+        for (Task task : needTask) {
+
+            taskInterval.put(task.getDescriptionTask(), "" + formatterDdHHmm.format(task.getTimeStart()) +
+                    " - " + formatterDdHHmm.format(task.getTimeFinish()));
+        }
+
+        return taskInterval;
+    }
+
+    @RequestMapping("show_sum_workcosts/{userName}/{dateA}/{dateB}")
+    public String showSumWorkCosts(@PathVariable("userName") String userName,
+                                             @PathVariable("dateA") String dateAStr,
+                                             @PathVariable("dateB") String dateBStr) throws ParseException {
+        User user = userRepository.findByName(userName);
+        if (user == null) {
+            throw new NameNotFoundException(userName);
+        }
+        Date dateA = formatterTimeTask.parse(dateAStr);
+        Date dateB = formatterTimeTask.parse(dateBStr);
+        List<Task> tasks = taskRepository.findByUserId(user.getId());
+        List<Task> needTask = new ArrayList<>();
+        for (Task task : tasks) {
+            if (task.getTimeFinish() == null) {
+                continue;
+            }
+            if ((dateA.before(task.getTimeStart())) && (dateB.after(task.getTimeFinish()))) {
+                needTask.add(task);
+            }
+        }
+
+        long timeMillies = 0;
+        for (Task task : needTask) {
+            timeMillies += Math.abs(task.getTimeStart().getTime() - task.getTimeFinish().getTime());
+        }
+        long timeMinutes = TimeUnit.MINUTES.convert(timeMillies, TimeUnit.MILLISECONDS);
+        long hours = timeMinutes / 60;
+        long minutes = timeMinutes % 60;
+        String time = "" + hours + ":" + minutes;
+        return userName + " - " + time;
+    }
 }
