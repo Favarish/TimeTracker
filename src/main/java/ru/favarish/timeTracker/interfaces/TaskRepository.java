@@ -12,7 +12,7 @@ public interface TaskRepository extends CrudRepository<Task, Integer> {
 
     Task findByName(String name);
 
-    List<Task> findByUserID();
+    List<Task> findByUserId(int userId);
 
-    List<Task> findByUserIDOrderByStartTime();
+    List<Task> findByUserIdOrderByTimeStart(Integer userId);
 }

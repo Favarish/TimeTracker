@@ -15,7 +15,7 @@ public class Task {
     @Id
     private Integer id;
 
-    private Integer userID;
+    private Integer userId;
 
     private String descriptionTask;
 
