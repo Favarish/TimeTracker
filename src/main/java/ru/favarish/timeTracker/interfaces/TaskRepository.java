@@ -7,4 +7,12 @@ import java.util.List;
 
 public interface TaskRepository extends CrudRepository<Task, Integer> {
     List<Task> findAll();
+
+    Task findById(int id);
+
+    Task findByName(String name);
+
+    List<Task> findByUserID();
+
+    List<Task> findByUserIDOrderByStartTime();
 }
