@@ -1,9 +1,8 @@
 package ru.favarish.timeTracker;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
 import ru.favarish.timeTracker.entities.Task;
 import ru.favarish.timeTracker.entities.User;
 import ru.favarish.timeTracker.exception.NameExistsException;
@@ -19,6 +18,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @org.springframework.web.bind.annotation.RestController
+@RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 public class RestController {
     @Autowired
     UserRepository userRepository;
@@ -30,7 +30,7 @@ public class RestController {
     SimpleDateFormat formatterHHmm = new SimpleDateFormat("HH:mm");
     SimpleDateFormat formatterDdHHmm = new SimpleDateFormat("dd HH:mm");
 
-    @RequestMapping("create_user/{name}")
+    @PutMapping("create_user/{name}")
     public void createUser(@PathVariable("name") String name) {
         User user = userRepository.findByName(name);
         if (user != null) {
@@ -42,7 +42,7 @@ public class RestController {
         userRepository.save(user);
     }
 
-    @RequestMapping("/create_user/{name}/{dateBirthStr}")
+    @PutMapping("/create_user/{name}/{dateBirthStr}")
     public void createUser(@PathVariable("name") String name,
                            @PathVariable("dateBirthStr") String dateBirthStr) throws ParseException {
         User user = userRepository.findByName(name);
@@ -57,7 +57,7 @@ public class RestController {
         userRepository.save(user);
     }
 
-    @RequestMapping("/create_user/{name}/{dateBirthStr}/{description}")
+    @PutMapping("/create_user/{name}/{dateBirthStr}/{description}")
     public void createUser(@PathVariable("name") String name,
                            @PathVariable("dateBirthStr") String dateBirthStr,
                            @PathVariable("description") String description) throws ParseException {
@@ -71,7 +71,7 @@ public class RestController {
         userRepository.save(user);
     }
 
-    @RequestMapping("user_update_name/{name}/{newName}")
+    @PostMapping("user_update_name/{name}/{newName}")
     public void userUpdateName(@PathVariable("name") String name,
                                @PathVariable("newName") String newName) {
         if (!userRepository.existsByName(name)) {
@@ -83,7 +83,7 @@ public class RestController {
         userRepository.save(user);
     }
 
-    @RequestMapping("user_update_dateBirth/{name}/{dateBirthStr}")
+    @PostMapping("user_update_dateBirth/{name}/{dateBirthStr}")
     public void userUpdateDateBirth(@PathVariable("name") String name,
                                     @PathVariable("dateBirthStr") String dateBirthStr) throws ParseException {
         if (!userRepository.existsByName(name)) {
@@ -96,7 +96,7 @@ public class RestController {
         userRepository.save(user);
     }
 
-    @RequestMapping("user_update_description/{name}/{description}")
+    @PostMapping("user_update_description/{name}/{description}")
     public void userUpdateDescription(@PathVariable("name") String name,
                                       @PathVariable("description") String description) {
         if (!userRepository.existsByName(name)) {
@@ -108,7 +108,7 @@ public class RestController {
         userRepository.save(user);
     }
 
-    @RequestMapping("user_update_all/{name}/{dateBirthStr}/{description}")
+    @PostMapping("user_update_all/{name}/{dateBirthStr}/{description}")
     public void userUpdateAll(@PathVariable("name") String name,
                               @PathVariable("dateBirthStr") String dateBirthStr,
                               @PathVariable("description") String description) throws ParseException {
@@ -123,7 +123,7 @@ public class RestController {
         userRepository.save(user);
     }
 
-    @RequestMapping("user_update_all/{name}/{newName}/{dateBirthStr}/{description}")
+    @PostMapping("user_update_all/{name}/{newName}/{dateBirthStr}/{description}")
     public void userUpdateAll(@PathVariable("name") String name,
                               @PathVariable("newName") String newName,
                               @PathVariable("dateBirthStr") String dateBirthStr,
@@ -140,7 +140,7 @@ public class RestController {
         userRepository.save(user);
     }
 
-    @RequestMapping("create_task/{userName}/{descriptionTask}")
+    @PutMapping("create_task/{userName}/{descriptionTask}")
     public void createTask(@PathVariable("userName") String userName,
                            @PathVariable("descriptionTask") String descriptionTask) throws ParseException {
         if (!userRepository.existsByName(userName)) {
@@ -160,28 +160,7 @@ public class RestController {
         taskRepository.save(task);
     }
 
-    @RequestMapping("create_task/{userName}/{descriptionTask}/{timeStart}")
-    public void createTask(@PathVariable("userName") String userName,
-                           @PathVariable("descriptionTask") String descriptionTask,
-                           @PathVariable("timeStart") String timeStart) throws ParseException {
-        if (!userRepository.existsByName(userName)) {
-            throw new NameNotFoundException(userName);
-        }
-        List<Task> tasksCheck = taskRepository.findByDescriptionTask(descriptionTask);
-        for (Task task : tasksCheck) {
-            if (task.getTimeFinish() == null) {
-                throw new TaskNotCompletedException(descriptionTask);
-            }
-        }
-
-        Date dateStart = formatterTimeTask.parse(timeStart);
-        User user = userRepository.findByName(userName);
-        Task task = new Task(user.getId(), descriptionTask, dateStart);
-
-        taskRepository.save(task);
-    }
-
-    @RequestMapping("complete_task/{userName}/{descriptionTask}")
+    @PostMapping("complete_task/{userName}/{descriptionTask}")
     public void completeTask(@PathVariable("userName") String userName,
                              @PathVariable("descriptionTask") String descriptionTask) {
         if (!userRepository.existsByName(userName)) {
@@ -210,7 +189,7 @@ public class RestController {
         taskRepository.save(task);
     }
 
-    @RequestMapping("show_work_costs/{userName}/{dateA}/{dateB}")
+    @GetMapping("show_work_costs/{userName}/{dateA}/{dateB}")
     public Map<String, String> showWorkCosts(@PathVariable("userName") String userName,
                                              @PathVariable("dateA") String dateAStr,
                                              @PathVariable("dateB") String dateBStr) throws ParseException {
@@ -246,7 +225,7 @@ public class RestController {
         return taskTime;
     }
 
-    @RequestMapping("show_time_intervals/{timeA}/{timeB}")
+    @GetMapping("show_time_intervals/{timeA}/{timeB}")
     public Map<String, String> showTimeIntervals(@PathVariable("timeA") String timeAStr,
                                                  @PathVariable("timeB") String timeBStr) throws ParseException {
         Date dateA = formatterTimeTask.parse(timeAStr);
@@ -273,7 +252,7 @@ public class RestController {
         return taskInterval;
     }
 
-    @RequestMapping("show_sum_workcosts/{userName}/{dateA}/{dateB}")
+    @GetMapping("show_sum_workcosts/{userName}/{dateA}/{dateB}")
     public String showSumWorkCosts(@PathVariable("userName") String userName,
                                    @PathVariable("dateA") String dateAStr,
                                    @PathVariable("dateB") String dateBStr) throws ParseException {
