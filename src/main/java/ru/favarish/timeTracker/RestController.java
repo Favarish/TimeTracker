@@ -1,5 +1,6 @@
 package ru.favarish.timeTracker;
 
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,8 @@ import java.util.concurrent.TimeUnit;
 @org.springframework.web.bind.annotation.RestController
 @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 public class RestController {
+    private static final Logger log = Logger.getLogger(RestController.class);
+
     @Autowired
     UserRepository userRepository;
 
@@ -34,12 +37,14 @@ public class RestController {
     public void createUser(@PathVariable("name") String name) {
         User user = userRepository.findByName(name);
         if (user != null) {
+            log.error("Request: create_user/" + name + "; Reason: user already exists");
             throw new NameExistsException(name);
         }
         user = new User();
         user.setName(name);
 
         userRepository.save(user);
+        log.info("New user created: Name: " + name);
     }
 
     @PutMapping("/create_user/{name}/{dateBirthStr}")
@@ -47,6 +52,7 @@ public class RestController {
                            @PathVariable("dateBirthStr") String dateBirthStr) throws ParseException {
         User user = userRepository.findByName(name);
         if (user != null) {
+            log.error("Request: create_user/" + name + "/" + dateBirthStr + "; Reason: user already exists");
             throw new NameExistsException(name);
         }
         Date dateBirth = formatterDateBirth.parse(dateBirthStr);
@@ -55,6 +61,7 @@ public class RestController {
         user.setDateBirth(dateBirth);
 
         userRepository.save(user);
+        log.info("New user created: Name: " + name);
     }
 
     @PutMapping("/create_user/{name}/{dateBirthStr}/{description}")
@@ -63,30 +70,38 @@ public class RestController {
                            @PathVariable("description") String description) throws ParseException {
         User user = userRepository.findByName(name);
         if (user != null) {
+            log.error("Request: create_user/" + name + "/" + dateBirthStr + "/"
+                    + description + "; Reason: user already exists");
             throw new NameExistsException(name);
         }
         Date dateBirth = formatterDateBirth.parse(dateBirthStr);
         user = new User(name, dateBirth, description);
 
         userRepository.save(user);
+        log.info("New user created: Name: " + name);
     }
 
     @PostMapping("user_update_name/{name}/{newName}")
     public void userUpdateName(@PathVariable("name") String name,
                                @PathVariable("newName") String newName) {
         if (!userRepository.existsByName(name)) {
+            log.error("Request: user_update_name/" + name + "/" + newName + "; " +
+                    "Reason: user with this name does not exist");
             throw new NameExistsException(name);
         }
         User user = userRepository.findByName(name);
         user.setName(newName);
 
         userRepository.save(user);
+        log.info("User data changed: Old name: " + name + "; New name: " + newName);
     }
 
     @PostMapping("user_update_dateBirth/{name}/{dateBirthStr}")
     public void userUpdateDateBirth(@PathVariable("name") String name,
                                     @PathVariable("dateBirthStr") String dateBirthStr) throws ParseException {
         if (!userRepository.existsByName(name)) {
+            log.error("Request: user_update_dateBirth/" + name + "/" + dateBirthStr + "; " +
+                    "Reason: user with this name does not exist");
             throw new NameExistsException(name);
         }
         User user = userRepository.findByName(name);
@@ -94,18 +109,22 @@ public class RestController {
         user.setDateBirth(date);
 
         userRepository.save(user);
+        log.info("User data changed: Name: " + name + "; New data birth: " + dateBirthStr);
     }
 
     @PostMapping("user_update_description/{name}/{description}")
     public void userUpdateDescription(@PathVariable("name") String name,
                                       @PathVariable("description") String description) {
         if (!userRepository.existsByName(name)) {
+            log.error("Request: user_update_description/" + name + "/" + description + "; " +
+                    "Reason: user with this name does not exist");
             throw new NameExistsException(name);
         }
         User user = userRepository.findByName(name);
         user.setDescription(description);
 
         userRepository.save(user);
+        log.info("User data changed; Name: " + name + "; New description: " + description);
     }
 
     @PostMapping("user_update_all/{name}/{dateBirthStr}/{description}")
@@ -113,6 +132,8 @@ public class RestController {
                               @PathVariable("dateBirthStr") String dateBirthStr,
                               @PathVariable("description") String description) throws ParseException {
         if (!userRepository.existsByName(name)) {
+            log.error("Request: user_update_all/" + name + "/" + dateBirthStr + "/" + description + "; " +
+                    "Reason: user with this name does not exist");
             throw new NameExistsException(name);
         }
         User user = userRepository.findByName(name);
@@ -121,6 +142,8 @@ public class RestController {
         user.setDescription(description);
 
         userRepository.save(user);
+        log.info("User data changed: Name: " + name + "; New date birth: " + dateBirthStr + "; " +
+                "New description: " + description);
     }
 
     @PostMapping("user_update_all/{name}/{newName}/{dateBirthStr}/{description}")
@@ -129,6 +152,8 @@ public class RestController {
                               @PathVariable("dateBirthStr") String dateBirthStr,
                               @PathVariable("description") String description) throws ParseException {
         if (!userRepository.existsByName(name)) {
+            log.error("Request: user_update_all/" + name + "/" + newName + "/" + dateBirthStr + "/"
+                    + description + "; " + "Reason: user with this name does not exist");
             throw new NameExistsException(name);
         }
         User user = userRepository.findByName(name);
@@ -138,12 +163,16 @@ public class RestController {
         user.setDescription(description);
 
         userRepository.save(user);
+        log.info("User data changed: Name: " + name + "; New name:" + newName + "; " +
+                "New date birth: " + dateBirthStr + "; " + "New description: " + description);
     }
 
     @PutMapping("create_task/{userName}/{descriptionTask}")
     public void createTask(@PathVariable("userName") String userName,
                            @PathVariable("descriptionTask") String descriptionTask) throws ParseException {
         if (!userRepository.existsByName(userName)) {
+            log.error("Request: create_task/" + userName + "/" + descriptionTask + "; " +
+                    "Reason: user with this name does not exist");
             throw new NameNotFoundException(userName);
         }
         List<Task> tasksCheck = taskRepository.findByDescriptionTask(descriptionTask);
@@ -158,12 +187,15 @@ public class RestController {
         Task task = new Task(user.getId(), descriptionTask, dateStart);
 
         taskRepository.save(task);
+        log.info("New task created: For user: " + userName + "; description: " + descriptionTask);
     }
 
     @PostMapping("complete_task/{userName}/{descriptionTask}")
     public void completeTask(@PathVariable("userName") String userName,
                              @PathVariable("descriptionTask") String descriptionTask) {
         if (!userRepository.existsByName(userName)) {
+            log.error("Request: complete_task/" + userName + "/" + descriptionTask + "; " +
+                    "Reason: user with this name does not exist");
             throw new NameNotFoundException(userName);
         }
         List<Task> tasks = taskRepository.findByDescriptionTask(descriptionTask);
@@ -187,6 +219,7 @@ public class RestController {
         task.setTimeFinish(date);
 
         taskRepository.save(task);
+        log.info("Task completed successfully: For user: " + userName + "; description: " + descriptionTask);
     }
 
     @GetMapping("show_work_costs/{userName}/{dateA}/{dateB}")
@@ -195,6 +228,8 @@ public class RestController {
                                              @PathVariable("dateB") String dateBStr) throws ParseException {
         User user = userRepository.findByName(userName);
         if (user == null) {
+            log.error("Request: show_work_costs/" + userName + "/" + dateAStr + "/" + dateBStr + "; " +
+                    "Reason: user with this name does not exist");
             throw new NameNotFoundException(userName);
         }
         Date dateA = formatterTimeTask.parse(dateAStr);
@@ -258,6 +293,8 @@ public class RestController {
                                    @PathVariable("dateB") String dateBStr) throws ParseException {
         User user = userRepository.findByName(userName);
         if (user == null) {
+            log.error("Request: show_sum_workcosts/" + userName + "/" + dateAStr + "/" + dateBStr + "; " +
+                    "Reason: user with this name does not exist");
             throw new NameNotFoundException(userName);
         }
         Date dateA = formatterTimeTask.parse(dateAStr);
@@ -288,22 +325,26 @@ public class RestController {
     public void deleteUserInfo(@PathVariable("userName") String userName) {
         User user = userRepository.findByName(userName);
         if (user == null) {
+            log.error("Request: delete_user_info/" + userName + "; " + "Reason: user with this name does not exist");
             throw new NameNotFoundException(userName);
         }
         user.setDescription(null);
         user.setDateBirth(null);
         userRepository.save(user);
+        log.info("User information deleted: User name:" + userName);
     }
 
     @DeleteMapping("clear_tracking_data/{userName}")
     public void clearTrackingData(@PathVariable("userName") String userName) {
         User user = userRepository.findByName(userName);
         if (user == null) {
+            log.error("Request: clear_tracking_data/" + userName + "; " + "Reason: user with this name does not exist");
             throw new NameNotFoundException(userName);
         }
         List<Task> tasks = taskRepository.findByUserId(user.getId());
         for (Task task : tasks) {
             taskRepository.delete(task);
         }
+        log.info("Tracking data user '" + userName + "' was  deleted");
     }
 }

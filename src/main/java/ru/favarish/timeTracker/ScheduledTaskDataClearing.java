@@ -1,5 +1,6 @@
 package ru.favarish.timeTracker;
 
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -14,11 +15,14 @@ public class ScheduledTaskDataClearing {
     @Autowired
     TaskRepository taskRepository;
 
+    private static final Logger log = Logger.getLogger(ScheduledTaskDataClearing.class);
+
     private static final long millesecondsMonth = 2592000000L;
     private static final long millesecondsHalfDay = 43200000;
 
     @Scheduled(fixedRate = millesecondsHalfDay)
     public void dataClearing() {
+        log.info("Scheduled task started");
         Date currentDate = new Date();
 
         List<Task> tasks = taskRepository.findAll();
@@ -30,5 +34,6 @@ public class ScheduledTaskDataClearing {
                 taskRepository.delete(task);
             }
         }
+        log.info("Scheduled task completed successfully");
     }
 }
